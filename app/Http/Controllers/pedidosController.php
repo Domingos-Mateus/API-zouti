@@ -14,22 +14,36 @@ class pedidosController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // Verifica se o usuário está autenticado
         $user = Auth::user();
-        // Se o usuário não estiver autenticado, retorna erro
         if (!$user) {
             return response()->json(['error' => 'Usuário não autenticado'], 401);
         }
 
         // Retorna o ID do usuário autenticado
         $user_id = $user->id;
-        // Busca os pedidos associados ao usuário
-        $pedido = Pedidos::where('user_id', $user_id)->get();
-        // Retorna os pedidos em formato JSON
-        return response()->json($pedido);
+
+        // Pega os parâmetros de data do request (data_inicio e data_fim)
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
+
+        // Inicia a query para buscar pedidos do usuário logado
+        $query = Pedidos::where('user_id', $user_id);
+
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros de data forem fornecidos
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Executa a query e busca os pedidos
+        $pedidos = $query->get();
+
+        // Retorna os pedidos filtrados em formato JSON
+        return response()->json($pedidos);
     }
+
 
     /**
      * Show the form for creating a new resource.

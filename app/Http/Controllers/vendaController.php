@@ -11,22 +11,36 @@ class vendaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Verifica se o usuário está autenticado
         $user = Auth::user();
-        // Se o usuário não estiver autenticado, retorna erro
         if (!$user) {
             return response()->json(['error' => 'Usuário não autenticado'], 401);
         }
 
         // Retorna o ID do usuário autenticado
         $user_id = $user->id;
-        // Busca os boletos associados ao usuário
-        $vendas = Vendas::where('user_id', $user_id)->get();
-        // Retorna os boletos em formato JSON
+
+        // Pega os parâmetros de data do request (data_inicio e end_date)
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
+
+        // Inicia a query para buscar as vendas do usuário logado
+        $query = Vendas::where('user_id', $user_id);
+
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros de data forem fornecidos
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Executa a query e busca as vendas
+        $vendas = $query->get();
+
+        // Retorna as vendas filtradas em formato JSON
         return response()->json($vendas);
     }
+
 
     /**
      * Show the form for creating a new resource.

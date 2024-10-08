@@ -14,20 +14,33 @@ class boletosController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // Verifica se o usuário está autenticado
         $user = Auth::user();
-        // Se o usuário não estiver autenticado, retorna erro
         if (!$user) {
             return response()->json(['error' => 'Usuário não autenticado'], 401);
         }
 
         // Retorna o ID do usuário autenticado
         $user_id = $user->id;
-        // Busca os boletos associados ao usuário
-        $boletos = Boletos::where('user_id', $user_id)->get();
-        // Retorna os boletos em formato JSON
+
+        // Pega os parâmetros de data do request
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
+
+        // Query básica para buscar boletos do usuário
+        $query = Boletos::where('user_id', $user_id);
+
+        // Aplica o filtro de data se as datas forem fornecidas
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Executa a query e busca os boletos
+        $boletos = $query->get();
+
+        // Retorna os boletos filtrados em formato JSON
         return response()->json($boletos);
     }
 

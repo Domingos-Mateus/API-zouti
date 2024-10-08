@@ -11,21 +11,36 @@ class ticketController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Verifica se o usuário está autenticado
         $user = Auth::user();
-        // Se o usuário não estiver autenticado, retorna erro
         if (!$user) {
             return response()->json(['error' => 'Usuário não autenticado'], 401);
         }
 
         // Retorna o ID do usuário autenticado
         $user_id = $user->id;
-        $ticket = Tickets::where('user_id', $user_id)->get();
-        // Retorna os boletos em formato JSON
-        return response()->json($ticket);
+
+        // Pega os parâmetros de data do request (start_date e end_date)
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
+
+        // Inicia a query para buscar os tickets do usuário logado
+        $query = Tickets::where('user_id', $user_id);
+
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros de data forem fornecidos
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Executa a query e busca os tickets
+        $tickets = $query->get();
+
+        // Retorna os tickets filtrados em formato JSON
+        return response()->json($tickets);
     }
+
 
     /**
      * Show the form for creating a new resource.

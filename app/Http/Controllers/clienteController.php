@@ -10,16 +10,29 @@ class clienteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Paginação de 1000 clientes por página
-        $clientes = Clientes::paginate(1000);
+        // Pega os parâmetros de data do request (data_inicio e end_date)
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
 
-        // Retornar os dados como JSON
+        // Inicia a query para buscar os clientes
+        $query = Clientes::query();
+
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros de data forem fornecidos
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Paginação de 1000 clientes por página
+        $clientes = $query->paginate(1000);
+
+        // Retorna os dados paginados e filtrados em formato JSON
         return response()->json([
             'clientes' => $clientes
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.

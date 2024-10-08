@@ -12,15 +12,34 @@ class chargebackController extends Controller
      * Display a listing of the resource.
      */
     // Listar todos os chargebacks do usuário logado
-    public function index()
-    {
-        // Obtém o ID do usuário logado
-        $user_id = Auth::user()->id;
-        // Busca todos os chargebacks associados ao usuário logado
-        $chargebacks = Chargebacks::where('user_id', $user_id)->orderBy('created_at', 'desc')->get();
-
-        return response()->json($chargebacks);
+    public function index(Request $request)
+{
+    // Verifica se o usuário está logado e obtém o ID do usuário logado
+    $user = Auth::user();
+    if (!$user) {
+        return response()->json(['error' => 'Usuário não autenticado'], 401);
     }
+
+    $user_id = $user->id;
+
+    // Pega os parâmetros de data do request (data_inicio e data_fim)
+    $startDate = $request->query('data_inicio'); // Data de início
+    $endDate = $request->query('data_fim'); // Data de fim
+
+    // Inicia a query para buscar chargebacks do usuário logado
+    $query = Chargebacks::where('user_id', $user_id);
+
+    // Aplica o filtro de intervalo de datas se ambos os parâmetros de data forem fornecidos
+    if ($startDate && $endDate) {
+        $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    // Ordena os resultados pela data de criação de forma decrescente
+    $chargebacks = $query->orderBy('created_at', 'desc')->get();
+
+    // Retorna os chargebacks filtrados em formato JSON
+    return response()->json($chargebacks);
+}
 
 
     /**

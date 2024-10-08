@@ -11,22 +11,36 @@ class prechargebacksController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        // Verifica se o usuário está autenticado
-        $user = Auth::user();
-        // Se o usuário não estiver autenticado, retorna erro
-        if (!$user) {
-            return response()->json(['error' => 'Usuário não autenticado'], 401);
-        }
-
-        // Retorna o ID do usuário autenticado
-        $user_id = $user->id;
-        // Busca os boletos associados ao usuário
-        $prechargeback = Prechargebacks::where('user_id', $user_id)->get();
-        // Retorna os boletos em formato JSON
-        return response()->json($prechargeback);
+    public function index(Request $request)
+{
+    // Verifica se o usuário está autenticado
+    $user = Auth::user();
+    if (!$user) {
+        return response()->json(['error' => 'Usuário não autenticado'], 401);
     }
+
+    // Retorna o ID do usuário autenticado
+    $user_id = $user->id;
+
+    // Inicia a query para buscar os prechargebacks do usuário logado
+    $query = Prechargebacks::where('user_id', $user_id);
+
+    // Pega os parâmetros de data do request (data_inicio e end_date)
+    $startDate = $request->query('data_inicio'); // Data de início
+    $endDate = $request->query('data_fim'); // Data de fim
+
+    // Aplica o filtro de intervalo de datas se ambos os parâmetros forem fornecidos
+    if ($startDate && $endDate) {
+        $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    // Executa a query e busca os prechargebacks
+    $prechargebacks = $query->get();
+
+    // Retorna os prechargebacks filtrados em formato JSON
+    return response()->json($prechargebacks);
+}
+
 
     /**
      * Show the form for creating a new resource.

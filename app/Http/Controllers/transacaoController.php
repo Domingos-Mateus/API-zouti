@@ -14,47 +14,51 @@ class transacaoController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-    // Obtém todos os clientes
-    $clientes = Clientes::all();
+    {
+        // Obtém todos os clientes
+        $clientes = Clientes::all();
 
-    // Conta o número total de transações
-    $contar = Transacaos::count();  // Corrigido para usar a model 'Transacaos'
+        // Conta o número total de transações
+        $contar = Transacaos::count();
 
-    // Obtendo o ID do usuário logado
-    $user_id = Auth::user()->id;
+        // Obtendo o ID do usuário logado
+        $user_id = Auth::user()->id;
 
-    // Inicia a consulta de transações com a junção das informações dos clientes
-    $query = DB::table('transacaos')  // Corrigido para usar a tabela 'transacaos'
-        ->join('clientes', 'transacaos.cliente_id', '=', 'clientes.id')
-        ->select('transacaos.*', 'clientes.nome as nome_cliente', 'clientes.email', 'clientes.abreviacao')
-        ->where('transacaos.user_id', '=', $user_id)
-        ->where('transacaos.created_at', '<=', now());
+        // Inicia a consulta de transações com a junção das informações dos clientes
+        $query = DB::table('transacaos')
+            ->join('clientes', 'transacaos.cliente_id', '=', 'clientes.id')
+            ->select('transacaos.*', 'clientes.nome as nome_cliente', 'clientes.email', 'clientes.abreviacao')
+            ->where('transacaos.user_id', '=', $user_id);
 
-    // Aplica filtro pelo nome do cliente, se fornecido
-    if ($request->has('cliente') && !empty($request->cliente)) {
-        $query->where('clientes.nome', 'like', '%' . $request->cliente . '%');
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros de data forem fornecidos
+        if ($request->has('data_inicio') && $request->has('data_fim')) {
+            $query->whereBetween('transacaos.created_at', [$request->data_inicio, $request->data_fim]);
+        }
+
+        // Aplica filtro pelo nome do cliente, se fornecido
+        if ($request->has('cliente') && !empty($request->cliente)) {
+            $query->where('clientes.nome', 'like', '%' . $request->cliente . '%');
+        }
+
+        // Aplica filtro pelo nome do produto, se fornecido
+        if ($request->has('produto') && !empty($request->produto)) {
+            $query->where('transacaos.nome_produto', 'like', '%' . $request->produto . '%');
+        }
+
+        // Ordena por data de forma descendente e aplica paginação com 20 itens por página
+        $transacoes = $query->orderBy('transacaos.created_at', 'desc')->paginate(20);
+
+        // Obtém o primeiro caractere do nome do usuário logado
+        $primeiro_caractere_usuario = substr(Auth::user()->name, 0, 1);
+
+        // Retorna os dados como JSON
+        return response()->json([
+            'clientes' => $clientes,
+            'transacoes' => $transacoes,
+            'contar' => $contar,
+            'primeiro_caractere_usuario' => $primeiro_caractere_usuario
+        ]);
     }
-
-    // Aplica filtro pelo nome do produto, se fornecido
-    if ($request->has('produto') && !empty($request->produto)) {
-        $query->where('transacaos.nome_produto', 'like', '%' . $request->produto . '%');
-    }
-
-    // Ordena por data de forma descendente e aplica paginação com 20 itens por página
-    $transacoes = $query->orderBy('transacaos.created_at', 'desc')->paginate(20);
-
-    // Obtém o primeiro caractere do nome do usuário logado
-    $primeiro_caractere_usuario = substr(Auth::user()->name, 0, 1);
-
-    // Retorna os dados como JSON
-    return response()->json([
-        'clientes' => $clientes,
-        'transacoes' => $transacoes,
-        'contar' => $contar,
-        'primeiro_caractere_usuario' => $primeiro_caractere_usuario
-    ]);
-}
 
     /**
      * Show the form for creating a new resource.

@@ -14,7 +14,7 @@ class ordemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Obtém todos os clientes
         $clientes = Clientes::all();
@@ -25,14 +25,23 @@ class ordemController extends Controller
         // Obtendo o ID do usuário logado
         $user_id = Auth::user()->id;
 
-        // Busca as transações com a junção das informações dos clientes e filtra pelo usuário logado
-        $transacoes = DB::table('transacoes')
-            ->join('clientes', 'transacoes.cliente_id', '=', 'clientes.id')
-            ->select('transacoes.*', 'clientes.nome as nome_cliente', 'clientes.email', 'clientes.abreviacao')
-            ->where('transacoes.created_at', '<=', now()) // Filtra por created_at
-            ->where('transacoes.user_id', '=', $user_id) // Filtra pelo user_id
-            ->orderBy('transacoes.created_at', 'desc') // Ordena por data de forma descendente
-            ->paginate(20); // Paginação com 20 itens por página
+        // Pega os parâmetros de data do request (data_inicio e end_date)
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
+
+        // Inicia a query para buscar as transações com a junção das informações dos clientes e filtra pelo usuário logado
+        $query = DB::table('transacaos')
+            ->join('clientes', 'transacaos.cliente_id', '=', 'clientes.id')
+            ->select('transacaos.*', 'clientes.nome as nome_cliente', 'clientes.email', 'clientes.abreviacao')
+            ->where('transacaos.user_id', '=', $user_id);
+
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros forem fornecidos
+        if ($startDate && $endDate) {
+            $query->whereBetween('transacaos.created_at', [$startDate, $endDate]);
+        }
+
+        // Ordena por data de forma descendente e aplica a paginação
+        $transacaos = $query->orderBy('transacaos.created_at', 'desc')->paginate(20);
 
         // Obtém o primeiro caractere do nome do usuário logado
         $primeiro_caractere_usuario = substr(Auth::user()->name, 0, 1);
@@ -40,7 +49,7 @@ class ordemController extends Controller
         // Retorna os dados como JSON
         return response()->json([
             'clientes' => $clientes,
-            'transacoes' => $transacoes,
+            'transacaos' => $transacaos,
             'contar' => $contar,
             'primeiro_caractere_usuario' => $primeiro_caractere_usuario
         ]);

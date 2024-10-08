@@ -13,27 +13,40 @@ class produtoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        // Verifica se o usuário está logado
-        if (!Auth::check()) {
-            // Retorna uma resposta de erro caso o usuário não esteja logado
-            return response()->json([
-                'error' => 'Usuário não autenticado'
-            ], 401); // Código HTTP 401 Unauthorized
-        }
-
-        // Obtendo o ID do usuário logado
-        $user_id = Auth::user()->id;
-
-        // Buscando produtos apenas do usuário logado
-        $produtos = Produtos::where('user_id', $user_id)->get();
-
-        // Retornando os dados como JSON
+    public function index(Request $request)
+{
+    // Verifica se o usuário está logado
+    if (!Auth::check()) {
+        // Retorna uma resposta de erro caso o usuário não esteja logado
         return response()->json([
-            'produtos' => $produtos
-        ]);
+            'error' => 'Usuário não autenticado'
+        ], 401); // Código HTTP 401 Unauthorized
     }
+
+    // Obtendo o ID do usuário logado
+    $user_id = Auth::user()->id;
+
+    // Pega os parâmetros de data do request (data_inicio e end_date)
+    $startDate = $request->query('data_inicio'); // Data de início
+    $endDate = $request->query('data_fim'); // Data de fim
+
+    // Inicia a query para buscar os produtos do usuário logado
+    $query = Produtos::where('user_id', $user_id);
+
+    // Aplica o filtro de intervalo de datas se ambos os parâmetros forem fornecidos
+    if ($startDate && $endDate) {
+        $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    // Executa a query e busca os produtos
+    $produtos = $query->get();
+
+    // Retornando os dados como JSON
+    return response()->json([
+        'produtos' => $produtos
+    ]);
+}
+
 
     /**
      * Show the form for creating a new resource.
