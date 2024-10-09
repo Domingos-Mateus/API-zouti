@@ -4,6 +4,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\boletosController;
 use App\Http\Controllers\chargebackController;
 use App\Http\Controllers\clienteController;
+use App\Http\Controllers\dashboardController;
 use App\Http\Controllers\ordemController;
 use App\Http\Controllers\pedidosController;
 use App\Http\Controllers\pixController;
@@ -75,12 +76,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/chargebacks/{id}', [chargebackController::class, 'update']);
     Route::delete('/chargebacks/{id}', [chargebackController::class, 'destroy']);
 
-     // Rotas para prechargebacks
-     Route::get('/prechargebacks', [prechargebacksController::class, 'index']);
-     Route::post('/prechargebacks', [PreChargebacksController::class, 'store']);
-     Route::get('/prechargebacks/{id}/edit', [PreChargebacksController::class, 'edit']);
-     Route::put('/prechargebacks/{id}', [PreChargebacksController::class, 'update']);
-     Route::delete('/prechargebacks/{id}', [PreChargebacksController::class, 'destroy']);
+    // Rotas para prechargebacks
+    Route::get('/prechargebacks', [prechargebacksController::class, 'index']);
+    Route::post('/prechargebacks', [PreChargebacksController::class, 'store']);
+    Route::get('/prechargebacks/{id}/edit', [PreChargebacksController::class, 'edit']);
+    Route::put('/prechargebacks/{id}', [PreChargebacksController::class, 'update']);
+    Route::delete('/prechargebacks/{id}', [PreChargebacksController::class, 'destroy']);
+
+    //Dashboard
+    Route::get('/dashboard', [dashboardController::class, 'index']);
 });
 
 // Rotas para clientes
