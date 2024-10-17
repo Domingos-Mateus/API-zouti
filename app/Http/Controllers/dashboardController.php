@@ -182,6 +182,7 @@ class dashboardController extends Controller
 
         // Retornar os dados em formato JSON
         return response()->json([
+            'saldo_disponivel' => 200,00,
             'boletos' => $boletos,
             'chargebacks' => $chargebacks,
             'pedidos' => $pedidos,
