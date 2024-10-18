@@ -25,6 +25,7 @@ class dashboardController extends Controller
     {
         // Obtendo o ID do usuário logado
         $user_id = Auth::user()->id;
+        $nome_usuario = Auth::user()->name;
 
         // Verificar se foram passadas datas como parâmetros
         $data_inicio = $request->input('data_inicio');
@@ -189,6 +190,7 @@ class dashboardController extends Controller
             'pixs' => $pixs,
             'tickets' => $tickets,
             'vendas' => $vendas,
+            'usuario_logado' => $nome_usuario,
             'primeiro_caractere_usuario' => $primeiro_caractere_usuario,
             'vendas_pix' => $vendas_pix,
             'total_vendas' => $total_vendas,
