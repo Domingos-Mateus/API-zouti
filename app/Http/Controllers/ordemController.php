@@ -76,22 +76,26 @@ class ordemController extends Controller
         'quantidade_pedidos_pix' => 'required|integer',
         'percentagem_conversao_pix' => 'required|numeric',
         'quantidade_pedidos_cartao' => 'required|integer',
+        'percentagem_pedidos_pagos_cartao' => 'required|numeric',
         'genero_cliente' => 'required|integer',
     ]);
 
     // Obter o ID do usuário logado
     $user_id = Auth::user()->id;
 
-    // Criação de uma nova ordem, associando o usuário logado
+    // Conversão do valor do produto para float
+    $valorProduto = floatval($request->valor_produto);
+
+    // Criação de uma nova ordem
     $ordens = Ordens::create([
         'nome_produto' => $request->nome_produto,
-        'valor_produto' => $request->valor_produto,
+        'valor_produto' => $valorProduto,
         'total_pedidos' => $request->quantidade_pedidos_pix + $request->quantidade_pedidos_cartao,
         'quantidade_pedidos_pix' => $request->quantidade_pedidos_pix,
         'percentagem_conversao_pix' => $request->percentagem_conversao_pix,
         'quantidade_pedidos_cartao' => $request->quantidade_pedidos_cartao,
         'genero_cliente' => $request->genero_cliente,
-        'user_id' => $user_id, // Associando a ordem ao usuário logado
+        'user_id' => $user_id,
     ]);
 
     // Quantidade de pedidos pagos com PIX
@@ -103,14 +107,14 @@ class ordemController extends Controller
         $transacao->cliente_id = $this->selecionarClientePorGenero($request->genero_cliente);
         $transacao->ordem_id = $ordens->id;
         $transacao->nome_produto = $request->nome_produto;
-        $transacao->valor_produto = $request->valor_produto;
+        $transacao->valor_produto = $valorProduto;
         $transacao->forma_pagamento = 'PIX';
         $transacao->status = $i < $quantidadePedidosPixPagos ? 'Pago' : 'Pendente';
         $transacao->data_pagamento = now();
-        $transacao->data_vencimento = now()->addDays(30); // Definindo data de vencimento
+        $transacao->data_vencimento = now()->addDays(30);
         $transacao->user_id = $user_id;
 
-        // Gera um número aleatório de segundos e define timestamps
+        // Gera timestamps aleatórios
         $segundosAleatorios = rand(0, 86400);
         $timestampAleatorio = now()->addSeconds($segundosAleatorios);
         $transacao->created_at = $timestampAleatorio;
@@ -126,20 +130,54 @@ class ordemController extends Controller
         $transacao->cliente_id = $this->selecionarClientePorGenero($request->genero_cliente);
         $transacao->ordem_id = $ordens->id;
         $transacao->nome_produto = $request->nome_produto;
-        $transacao->valor_produto = $request->valor_produto;
         $transacao->forma_pagamento = 'Cartão';
-        $transacao->status = $i < ($request->quantidade_pedidos_cartao * 0.7) ? 'Pago' : 'Pendente';
+        $transacao->valor_produto = $valorProduto;
         $transacao->data_pagamento = now();
-        $transacao->data_vencimento = now()->addDays(30); // Definindo data de vencimento
-        $transacao->user_id = $user_id;
+        $transacao->data_vencimento = now()->addDays(30);
 
-        // Gera um número aleatório de segundos e define timestamps
+        // Gera timestamps aleatórios
         $segundosAleatorios = rand(0, 86400);
         $timestampAleatorio = now()->addSeconds($segundosAleatorios);
         $transacao->created_at = $timestampAleatorio;
         $transacao->updated_at = $timestampAleatorio;
         $transacao->timestamps = false;
 
+        // Verificação do status de pagamento do pedido Cartão
+        $percentagem_pedidos_pagos_cartao = $request->percentagem_pedidos_pagos_cartao;
+        if ($i < ($request->quantidade_pedidos_cartao * ($percentagem_pedidos_pagos_cartao / 100))) {
+            $transacao->status = 'Pago';
+        } else {
+            $transacao->status = 'Recusado';
+        }
+
+        // Define aleatoriamente o número de parcelas
+        $numeroParcelas = [1, 2, 3, 6, 10, 12];
+        $parcelas = $numeroParcelas[array_rand($numeroParcelas)];
+
+        // Calcula o valor do produto com base nas parcelas
+        if ($parcelas == 2) {
+            $valorParcela = ($valorProduto * 1.29) / $parcelas;
+        } elseif ($parcelas == 3) {
+            $valorParcela = ($valorProduto * 1.32) / $parcelas;
+        } elseif ($parcelas == 6) {
+            $valorParcela = ($valorProduto * 1.26) / $parcelas;
+        } elseif ($parcelas == 10) {
+            $valorParcela = ($valorProduto * 1.30) / $parcelas;
+        } elseif ($parcelas == 12) {
+            $valorParcela = ($valorProduto * 1.45) / $parcelas;
+        } else {
+            $valorParcela = $valorProduto / $parcelas;
+        }
+
+        $transacao->valor_produto = $valorParcela * $parcelas;
+        $transacao->parcelas = $parcelas;
+        $transacao->valor_parcela = $valorParcela;
+
+        // Define aleatoriamente o tipo de cartão
+        $cartaoAleatorio = mt_rand(1, 100);
+        $transacao->tipo_cartao = $cartaoAleatorio <= 40 ? 'Mastercard' : ($cartaoAleatorio <= 80 ? 'Visa' : 'Ello');
+
+        $transacao->user_id = $user_id;
         $transacao->save();
     }
 
