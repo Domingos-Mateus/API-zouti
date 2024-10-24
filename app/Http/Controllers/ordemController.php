@@ -19,13 +19,16 @@ class ordemController extends Controller
         // Obtém todos os clientes
         $clientes = Clientes::all();
 
+        // Obtém todas as ordens com todos os campos
+        $ordens = Ordens::all();
+
         // Conta o número total de transações
         $contar = Transacaos::count();
 
         // Obtendo o ID do usuário logado
         $user_id = Auth::user()->id;
 
-        // Pega os parâmetros de data do request (data_inicio e end_date)
+        // Pega os parâmetros de data do request (data_inicio e data_fim)
         $startDate = $request->query('data_inicio'); // Data de início
         $endDate = $request->query('data_fim'); // Data de fim
 
@@ -48,12 +51,14 @@ class ordemController extends Controller
 
         // Retorna os dados como JSON
         return response()->json([
+            'ordens' => $ordens, // Inclui as ordens com todos os campos
             'clientes' => $clientes,
             'transacaos' => $transacaos,
             'contar' => $contar,
-            'primeiro_caractere_usuario' => $primeiro_caractere_usuario
+            'primeiro_caractere_usuario' => $primeiro_caractere_usuario,
         ]);
     }
+
 
 
     /**
