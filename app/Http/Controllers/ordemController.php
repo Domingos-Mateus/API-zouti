@@ -41,11 +41,10 @@ class ordemController extends Controller
         // Busca o valor de parcelas na tabela transacaos correspondente à ordem atual
         $transacao = DB::table('transacaos')
             ->where('ordem_id', $ordem->id)
-            ->select('parcelas') // Obtém apenas o campo parcelas
+            //->select('parcelas') // Obtém apenas o campo parcelas
             ->first();
 
-        // Adiciona o campo parcelas à ordem se existir uma transação
-        $ordem->parcelas = $transacao ? $transacao->parcelas : null;
+
 
         return $ordem;
     });
