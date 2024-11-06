@@ -41,26 +41,32 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas para boletos
     Route::get('/boletos', [boletosController::class, 'index']);
     Route::post('/boletos', [boletosController::class, 'store']);
+    Route::delete('/eliminar_boleto/{id}', [boletosController::class, 'destroy']);
 
     // Rotas para pedidos
     Route::get('/pedidos', [pedidosController::class, 'index']);
     Route::post('/pedidos', [pedidosController::class, 'store']);
+    Route::delete('/eliminar_pedido/{id}', [pedidosController::class, 'destroy']);
 
     // Rotas para pixs
     Route::get('/pixs', [pixController::class, 'index']);
     Route::post('/pixs', [pixController::class, 'store']);
+    Route::delete('/eliminar_pix/{id}', [pixController::class, 'destroy']);
 
     // Rotas para tickets
     Route::get('/listar_tickets', [ticketController::class, 'index']);
     Route::post('/registrar_tickets', [ticketController::class, 'store']);
+    Route::delete('/eliminar_ticket/{id}', [ticketController::class, 'destroy']);
 
     // Rotas para vendas
     Route::get('/listar_vendas', [vendaController::class, 'index']);
     Route::post('/registrar_vendas', [vendaController::class, 'store']);
+    Route::delete('/eliminar_venda/{id}', [vendaController::class, 'destroy']);
 
     // Rotas para ordens
     Route::get('/listar_ordens', [ordemController::class, 'index']);
     Route::post('/registrar_ordens', [ordemController::class, 'store']);
+    Route::delete('/eliminar_ordens/{id}', [ordemController::class, 'destroy']);
 
     // Rotas para transações
     Route::get('/listar_transacaos', [transacaoController::class, 'index']);
@@ -69,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas para produtos
     Route::get('/listar_produtos', [produtoController::class, 'index']);
     Route::post('/registrar_produtos', [produtoController::class, 'store']);
+    Route::delete('/eliminar_produto/{id}', [produtoController::class, 'destroy']);
 
     // Rotas para chargebacks
     Route::get('/chargebacks', [chargebackController::class, 'index']);
@@ -90,3 +97,4 @@ Route::middleware('auth:sanctum')->group(function () {
 // Rotas para clientes
 Route::get('/listar_clientes', [clienteController::class, 'index']);
 Route::post('/registrar_clientes', [clienteController::class, 'store']);
+Route::delete('/eliminar_cliente/{id}', [clienteController::class, 'destroy']);

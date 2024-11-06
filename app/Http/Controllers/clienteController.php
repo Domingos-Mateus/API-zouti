@@ -94,6 +94,16 @@ class clienteController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        // Verifica se o cliente existe
+    $cliente = Clientes::find($id);
+
+    if (!$cliente) {
+        return response()->json(['error' => 'Cliente não encontrado'], 404);
+    }
+
+    // Exclui o cliente
+    $cliente->delete();
+
+    return response()->json(['success' => true, 'message' => 'Cliente excluído com sucesso!'], 200);
     }
 }

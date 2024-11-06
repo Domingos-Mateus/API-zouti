@@ -232,6 +232,24 @@ class ordemController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        // Verifica se a ordem existe
+    $ordem = Ordens::find($id);
+
+    if (!$ordem) {
+        return response()->json(['mensagem' => 'Ordem não encontrada'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono da ordem
+    if ($ordem->user_id !== Auth::id()) {
+        return response()->json(['mensagem' => 'Acesso não autorizado'], 403);
+    }
+
+    // Deleta as transações associadas à ordem
+    Transacaos::where('ordem_id', $ordem->id)->delete();
+
+    // Deleta a ordem
+    $ordem->delete();
+
+    return response()->json(['mensagem' => 'Ordem e transações associadas deletadas com sucesso!'], 200);
     }
 }

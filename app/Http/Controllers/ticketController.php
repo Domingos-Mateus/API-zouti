@@ -115,6 +115,21 @@ class ticketController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        // Verifica se o ticket existe
+    $ticket = Tickets::find($id);
+
+    if (!$ticket) {
+        return response()->json(['error' => 'Ticket não encontrado'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono do ticket
+    if ($ticket->user_id !== Auth::id()) {
+        return response()->json(['error' => 'Acesso não autorizado'], 403);
+    }
+
+    // Exclui o ticket
+    $ticket->delete();
+
+    return response()->json(['success' => true, 'message' => 'Ticket excluído com sucesso!'], 200);
     }
 }

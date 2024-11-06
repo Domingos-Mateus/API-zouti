@@ -137,6 +137,21 @@ class pedidosController extends Controller
      */
     public function destroy($id)
     {
-        //
+        // Verifica se o pedido existe
+    $pedido = Pedidos::find($id);
+
+    if (!$pedido) {
+        return response()->json(['error' => 'Pedido não encontrado'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono do pedido
+    if ($pedido->user_id !== Auth::id()) {
+        return response()->json(['error' => 'Acesso não autorizado'], 403);
+    }
+
+    // Exclui o pedido
+    $pedido->delete();
+
+    return response()->json(['success' => true, 'message' => 'Pedido excluído com sucesso!'], 200);
     }
 }

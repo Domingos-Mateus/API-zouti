@@ -114,6 +114,21 @@ class vendaController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+         // Verifica se a venda existe
+    $venda = Vendas::find($id);
+
+    if (!$venda) {
+        return response()->json(['error' => 'Venda não encontrada'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono da venda
+    if ($venda->user_id !== Auth::id()) {
+        return response()->json(['error' => 'Acesso não autorizado'], 403);
+    }
+
+    // Exclui a venda
+    $venda->delete();
+
+    return response()->json(['success' => true, 'message' => 'Venda excluída com sucesso!'], 200);
     }
 }

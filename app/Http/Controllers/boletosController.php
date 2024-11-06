@@ -138,6 +138,21 @@ class boletosController extends Controller
      */
     public function destroy($id)
     {
-        //
+        // Verifica se o boleto existe
+    $boleto = Boletos::find($id);
+
+    if (!$boleto) {
+        return response()->json(['error' => 'Boleto não encontrado'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono do boleto
+    if ($boleto->user_id !== Auth::id()) {
+        return response()->json(['error' => 'Acesso não autorizado'], 403);
+    }
+
+    // Exclui o boleto
+    $boleto->delete();
+
+    return response()->json(['success' => true, 'message' => 'Boleto excluído com sucesso!'], 200);
     }
 }

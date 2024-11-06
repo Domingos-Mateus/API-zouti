@@ -14,38 +14,38 @@ class produtoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
-{
-    // Verifica se o usuário está logado
-    if (!Auth::check()) {
-        // Retorna uma resposta de erro caso o usuário não esteja logado
+    {
+        // Verifica se o usuário está logado
+        if (!Auth::check()) {
+            // Retorna uma resposta de erro caso o usuário não esteja logado
+            return response()->json([
+                'error' => 'Usuário não autenticado'
+            ], 401); // Código HTTP 401 Unauthorized
+        }
+
+        // Obtendo o ID do usuário logado
+        $user_id = Auth::user()->id;
+
+        // Pega os parâmetros de data do request (data_inicio e end_date)
+        $startDate = $request->query('data_inicio'); // Data de início
+        $endDate = $request->query('data_fim'); // Data de fim
+
+        // Inicia a query para buscar os produtos do usuário logado
+        $query = Produtos::where('user_id', $user_id);
+
+        // Aplica o filtro de intervalo de datas se ambos os parâmetros forem fornecidos
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Executa a query e busca os produtos
+        $produtos = $query->get();
+
+        // Retornando os dados como JSON
         return response()->json([
-            'error' => 'Usuário não autenticado'
-        ], 401); // Código HTTP 401 Unauthorized
+            'produtos' => $produtos
+        ]);
     }
-
-    // Obtendo o ID do usuário logado
-    $user_id = Auth::user()->id;
-
-    // Pega os parâmetros de data do request (data_inicio e end_date)
-    $startDate = $request->query('data_inicio'); // Data de início
-    $endDate = $request->query('data_fim'); // Data de fim
-
-    // Inicia a query para buscar os produtos do usuário logado
-    $query = Produtos::where('user_id', $user_id);
-
-    // Aplica o filtro de intervalo de datas se ambos os parâmetros forem fornecidos
-    if ($startDate && $endDate) {
-        $query->whereBetween('created_at', [$startDate, $endDate]);
-    }
-
-    // Executa a query e busca os produtos
-    $produtos = $query->get();
-
-    // Retornando os dados como JSON
-    return response()->json([
-        'produtos' => $produtos
-    ]);
-}
 
 
     /**
@@ -66,36 +66,36 @@ class produtoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-{
-    // Verificação se o usuário está logado
-    if (!Auth::check()) {
+    {
+        // Verificação se o usuário está logado
+        if (!Auth::check()) {
+            return response()->json([
+                'error' => 'Usuário não autenticado'
+            ], 401); // Retorna 401 se o usuário não estiver autenticado
+        }
+
+        // Validação dos dados
+        $request->validate([
+            'nome_produto' => 'required|string|max:100',
+            'preco' => 'required|string|max:100',
+        ]);
+
+        // Criação de um novo produto
+        $produtos = new Produtos;
+        $produtos->nome_produto = $request->nome_produto;
+        $produtos->preco = $request->preco;
+        $produtos->user_id = Auth::id(); // Obtém o ID do usuário logado
+
+        // Salvando o produto
+        $produtos->save();
+
+        // Retorna uma resposta JSON indicando sucesso
         return response()->json([
-            'error' => 'Usuário não autenticado'
-        ], 401); // Retorna 401 se o usuário não estiver autenticado
+            'success' => true,
+            'message' => 'Produto salvo com sucesso!',
+            'produto' => $produtos
+        ], 201); // Código 201 para recurso criado
     }
-
-    // Validação dos dados
-    $request->validate([
-        'nome_produto' => 'required|string|max:100',
-        'preco' => 'required|string|max:100',
-    ]);
-
-    // Criação de um novo produto
-    $produtos = new Produtos;
-    $produtos->nome_produto = $request->nome_produto;
-    $produtos->preco = $request->preco;
-    $produtos->user_id = Auth::id(); // Obtém o ID do usuário logado
-
-    // Salvando o produto
-    $produtos->save();
-
-    // Retorna uma resposta JSON indicando sucesso
-    return response()->json([
-        'success' => true,
-        'message' => 'Produto salvo com sucesso!',
-        'produto' => $produtos
-    ], 201); // Código 201 para recurso criado
-}
 
     /**
      * Display the specified resource.
@@ -139,6 +139,21 @@ class produtoController extends Controller
      */
     public function destroy($id)
     {
-        //
+        // Verifica se o produto existe
+    $produto = Produtos::find($id);
+
+    if (!$produto) {
+        return response()->json(['error' => 'Produto não encontrado'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono do produto
+    if ($produto->user_id !== Auth::id()) {
+        return response()->json(['error' => 'Acesso não autorizado'], 403);
+    }
+
+    // Exclui o produto
+    $produto->delete();
+
+    return response()->json(['success' => true, 'message' => 'Produto excluído com sucesso!'], 200);
     }
 }

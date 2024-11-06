@@ -115,6 +115,21 @@ class pixController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+         // Verifica se o registro de PIX existe
+    $pix = Pixs::find($id);
+
+    if (!$pix) {
+        return response()->json(['error' => 'Registro de PIX não encontrado'], 404);
+    }
+
+    // Verifica se o usuário logado é o dono do registro de PIX
+    if ($pix->user_id !== Auth::id()) {
+        return response()->json(['error' => 'Acesso não autorizado'], 403);
+    }
+
+    // Exclui o registro de PIX
+    $pix->delete();
+
+    return response()->json(['success' => true, 'message' => 'Registro de PIX excluído com sucesso!'], 200);
     }
 }
